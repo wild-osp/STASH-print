@@ -52,7 +52,7 @@
             background: #f8fafc;
             border: 2px dashed #cbd5e1;
             border-radius: 16px;
-            padding: 20px;
+            padding: 20px 16px;
             margin: 24px 0;
             text-align: center;
         }
@@ -81,12 +81,63 @@
         .custom-file-btn:hover {
             background: #cbd5e1;
         }
-        .file-name-display {
+
+        /* Список выбранных файлов */
+        .file-list {
+            margin-top: 10px;
+            margin-bottom: 14px;
+            max-height: 180px;
+            overflow-y: auto;
+            text-align: left;
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+        .file-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            background: #ffffff;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            padding: 8px 12px;
             font-size: 13px;
-            color: #059669;
-            margin-bottom: 12px;
-            word-break: break-all;
+        }
+        .file-item-info {
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            margin-right: 8px;
+        }
+        .file-item-name {
             font-weight: 500;
+            color: #1e293b;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        .file-item-size {
+            font-size: 11px;
+            color: #64748b;
+        }
+        .file-remove-btn {
+            background: #fee2e2;
+            color: #ef4444;
+            border: none;
+            border-radius: 6px;
+            width: 26px;
+            height: 26px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            font-size: 13px;
+            flex-shrink: 0;
+            transition: background 0.2s;
+        }
+        .file-remove-btn:hover {
+            background: #fecaca;
         }
 
         /* Кнопки мессенджеров */
@@ -156,9 +207,12 @@
     <div class="file-upload-card">
         <label class="file-label">📁 Выберите документ или фото:</label>
         <label for="fileInput" class="custom-file-btn">Выбрать файлы</label>
-        <input type="file" id="fileInput" multiple onchange="showFileName()">
-        <div id="fileName" class="file-name-display">Файл не выбран</div>
-        <button class="btn btn-file-send" onclick="sendFileEmail()" style="margin-bottom: 0; padding: 12px; font-size: 14px;">Отправить на почту</button>
+        <input type="file" id="fileInput" multiple onchange="handleFileSelect(event)">
+        
+        <!-- Контейнер для отображения выбранных файлов с удалением -->
+        <div id="fileList" class="file-list"></div>
+
+        <button id="sendEmailBtn" class="btn btn-file-send" onclick="sendFileEmail()" style="margin-bottom: 0; padding: 12px; font-size: 14px; display: none;">Отправить на почту</button>
     </div>
 
     <div class="divider">или через мессенджер</div>
@@ -197,30 +251,78 @@
 </div>
 
 <script>
-    function showFileName() {
-        const fileInput = document.getElementById('fileInput');
-        const fileNameDiv = document.getElementById('fileName');
-        if (fileInput.files.length === 1) {
-            fileNameDiv.textContent = "Выбран: " + fileInput.files[0].name;
-        } else if (fileInput.files.length > 1) {
-            fileNameDiv.textContent = `Выбрано файлов: ${fileInput.files.length}`;
-        } else {
-            fileNameDiv.textContent = "Файл не выбран";
+    let selectedFiles = [];
+
+    function formatFileSize(bytes) {
+        if (bytes < 1024) return bytes + ' Б';
+        else if (bytes < 1048576) return (bytes / 1024).toFixed(1) + ' КБ';
+        else return (bytes / 1048576).toFixed(1) + ' МБ';
+    }
+
+    function handleFileSelect(event) {
+        const newFiles = Array.from(event.target.files);
+        // Добавляем новые выбранные файлы к уже существующим
+        selectedFiles = selectedFiles.concat(newFiles);
+        event.target.value = ''; // сбрасываем input, чтобы можно было снова выбрать тот же файл
+        renderFileList();
+    }
+
+    function removeFile(index) {
+        selectedFiles.splice(index, 1);
+        renderFileList();
+    }
+
+    function renderFileList() {
+        const fileListContainer = document.getElementById('fileList');
+        const sendBtn = document.getElementById('sendEmailBtn');
+        fileListContainer.innerHTML = '';
+
+        if (selectedFiles.length === 0) {
+            sendBtn.style.display = 'none';
+            return;
         }
+
+        selectedFiles.forEach((file, index) => {
+            const item = document.createElement('div');
+            item.className = 'file-item';
+
+            const info = document.createElement('div');
+            info.className = 'file-item-info';
+
+            const name = document.createElement('span');
+            name.className = 'file-item-name';
+            name.textContent = file.name;
+
+            const size = document.createElement('span');
+            size.className = 'file-item-size';
+            size.textContent = formatFileSize(file.size);
+
+            info.appendChild(name);
+            info.appendChild(size);
+
+            const removeBtn = document.createElement('button');
+            removeBtn.className = 'file-remove-btn';
+            removeBtn.innerHTML = '&#10005;';
+            removeBtn.title = 'Удалить этот файл';
+            removeBtn.onclick = () => removeFile(index);
+
+            item.appendChild(info);
+            item.appendChild(removeBtn);
+            fileListContainer.appendChild(item);
+        });
+
+        sendBtn.style.display = 'flex';
+        sendBtn.textContent = `Отправить на почту (${selectedFiles.length})`;
     }
 
     function sendFileEmail() {
-        const fileInput = document.getElementById('fileInput');
-        if (fileInput.files.length === 0) {
-            alert('Пожалуйста, выберите файл на телефоне!');
+        if (selectedFiles.length === 0) {
+            alert('Пожалуйста, выберите хотя бы один файл!');
             return;
         }
-        let fileNames = [];
-        for (let i = 0; i < fileInput.files.length; i++) {
-            fileNames.push(fileInput.files[i].name);
-        }
+        const fileNames = selectedFiles.map(f => f.name);
         const subjectText = encodeURIComponent("Печать: " + fileNames.slice(0, 2).join(', ') + (fileNames.length > 2 ? '...' : ''));
-        window.location.href = `mailto:info@stash.by?subject=${subjectText}&body=Файлов выбрано: ${fileInput.files.length}`;
+        window.location.href = `mailto:info@stash.by?subject=${subjectText}&body=Выбрано файлов: ${selectedFiles.length}`;
     }
 </script>
 
