@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>STASH — Отправить файл на печать</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background-color: #f4f5f7;
+            color: #333;
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+        }
+        .card {
+            background: #ffffff;
+            width: 100%;
+            max-width: 400px;
+            padding: 30px 20px;
+            border-radius: 20px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+            text-align: center;
+        }
+        h0 {
+            display: block;
+            font-size: 24px;
+            font-weight: 700;
+            margin-bottom: 8px;
+            color: #111;
+        }
+        .subtitle {
+            font-size: 15px;
+            color: #666;
+            margin-bottom: 30px;
+            line-height: 1.4;
+        }
+        .btn {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 100%;
+            padding: 16px;
+            margin-bottom: 14px;
+            border-radius: 12px;
+            font-size: 16px;
+            font-weight: 600;
+            text-decoration: none;
+            color: white;
+            box-sizing: border-box;
+            transition: opacity 0.2s;
+        }
+        .btn:active {
+            opacity: 0.8;
+        }
+        .btn-viber { background-color: #7360f2; }
+        .btn-telegram { background-color: #24a1de; }
+        .btn-whatsapp { background-color: #25d366; }
+        .btn-email { background-color: #4285f4; }
+        
+        .footer {
+            margin-top: 25px;
+            font-size: 13px;
+            color: #999;
+        }
+    </style>
+</head>
+<body>
+
+<div class="card">
+    <h0>STASH</h0>
+    <div class="subtitle">Отправьте файл для печати в один клик через удобный мессенджер или почту:</div>
+
+    <!-- Viber -->
+    <a href="viber://chat?number=+375291507744" class="btn btn-viber">
+        💬 Отправить в Viber
+    </a>
+
+    <!-- Telegram -->
+    <a href="https://t.me/+375291507744" class="btn btn-telegram">
+        ✈️ Отправить в Telegram
+    </a>
+
+    <!-- WhatsApp -->
+    <a href="https://wa.me/375291507744" class="btn btn-whatsapp">
+        🟢 Отправить в WhatsApp
+    </a>
+
+    <!-- Email -->
+    <a href="mailto:info@stash.by?subject=Печать" class="btn btn-email">
+        📧 Отправить на Email
+    </a>
+
+    <div class="footer">
+        Сервис технического ремонта и печати STASH
+    </div>
+</div>
+
+</body>
+</html>
