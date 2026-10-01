@@ -4,118 +4,182 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>STASH — Отправить файл на печать</title>
+    <!-- Подключаем современный шрифт Inter -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <style>
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-            background-color: #f4f5f7;
-            color: #333;
+        * {
+            box-sizing: border-box;
             margin: 0;
-            padding: 20px;
+            padding: 0;
+        }
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: linear-gradient(135deg, #f5f7fa 0%, #e4e8f0 100%);
+            color: #1a1a1a;
+            min-height: 100vh;
             display: flex;
             justify-content: center;
             align-items: center;
-            min-height: 100vh;
+            padding: 16px;
         }
         .card {
             background: #ffffff;
             width: 100%;
-            max-width: 400px;
-            padding: 30px 20px;
-            border-radius: 20px;
-            box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+            max-width: 420px;
+            padding: 32px 24px;
+            border-radius: 24px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.06);
             text-align: center;
         }
-        h1 {
-            font-size: 24px;
+        .logo-area {
+            margin-bottom: 20px;
+        }
+        .logo-area h1 {
+            font-size: 28px;
             font-weight: 700;
-            margin: 0 0 8px 0;
+            letter-spacing: 0.5px;
             color: #111;
+            margin-bottom: 6px;
         }
         .subtitle {
-            font-size: 14px;
+            font-size: 15px;
             color: #666;
-            margin-bottom: 25px;
-            line-height: 1.4;
+            line-height: 1.5;
         }
+        
+        /* Блок загрузки файла */
+        .file-upload-card {
+            background: #f8fafc;
+            border: 2px dashed #cbd5e1;
+            border-radius: 16px;
+            padding: 20px;
+            margin: 24px 0;
+            text-align: center;
+            transition: border-color 0.2s;
+        }
+        .file-upload-card:hover {
+            border-color: #3b82f6;
+        }
+        .file-label {
+            display: block;
+            font-size: 14px;
+            font-weight: 600;
+            color: #334155;
+            margin-bottom: 12px;
+            cursor: pointer;
+        }
+        input[type="file"] {
+            display: none;
+        }
+        .custom-file-btn {
+            display: inline-block;
+            background: #e2e8f0;
+            color: #334155;
+            padding: 10px 16px;
+            border-radius: 10px;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            margin-bottom: 12px;
+            transition: background 0.2s;
+        }
+        .custom-file-btn:hover {
+            background: #cbd5e1;
+        }
+        .file-name-display {
+            font-size: 13px;
+            color: #059669;
+            margin-bottom: 12px;
+            word-break: break-all;
+            font-weight: 500;
+        }
+
+        /* Кнопки мессенджеров */
         .btn {
             display: flex;
             align-items: center;
             justify-content: center;
+            gap: 10px;
             width: 100%;
-            padding: 15px;
+            padding: 16px;
             margin-bottom: 12px;
-            border-radius: 12px;
+            border-radius: 14px;
             font-size: 16px;
             font-weight: 600;
             text-decoration: none;
             color: white;
-            box-sizing: border-box;
             border: none;
             cursor: pointer;
-            transition: opacity 0.2s;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+            transition: transform 0.1s, opacity 0.2s;
         }
         .btn:active {
-            opacity: 0.8;
+            transform: scale(0.98);
+            opacity: 0.9;
         }
-        .btn-viber { background-color: #7360f2; }
-        .btn-telegram { background-color: #24a1de; }
-        .btn-whatsapp { background-color: #25d366; }
-        .btn-file { background-color: #ff8c00; }
-        .btn-email { background-color: #4285f4; }
         
-        .file-box {
-            background: #fafafa;
-            border: 2px dashed #ddd;
-            padding: 15px;
-            border-radius: 12px;
-            margin-bottom: 20px;
-            text-align: left;
-        }
-        .file-box label {
-            display: block;
+        .btn-file-send { background: linear-gradient(135deg, #f97316 0%, #ea580c 100%); }
+        .btn-telegram { background: linear-gradient(135deg, #229ed9 0%, #1785be 100%); }
+        .btn-whatsapp { background: linear-gradient(135deg, #25d366 0%, #1ebe5d 100%); }
+        .btn-viber { background: linear-gradient(135deg, #7360f2 0%, #5c47e0 100%); }
+        .btn-email { background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%); }
+
+        .divider {
             font-size: 13px;
-            color: #555;
-            margin-bottom: 8px;
-            font-weight: 600;
+            color: #94a3b8;
+            margin: 20px 0 16px;
+            position: relative;
         }
-        input[type="file"] {
-            width: 100%;
-            font-size: 13px;
-            color: #555;
+        .divider::before, .divider::after {
+            content: "";
+            position: absolute;
+            top: 50%;
+            width: 30%;
+            height: 1px;
+            background: #e2e8f0;
         }
+        .divider::before { left: 0; }
+        .divider::after { right: 0; }
+
         .footer {
-            margin-top: 20px;
+            margin-top: 24px;
             font-size: 12px;
-            color: #999;
+            color: #94a3b8;
         }
     </style>
 </head>
 <body>
 
 <div class="card">
-    <h1>STASH</h1>
-    <div class="subtitle">Выберите способ отправки файла для печати:</div>
-
-    <!-- Прямая загрузка файла с устройства на почту -->
-    <div class="file-box">
-        <label>📁 Выбрать файл с телефона:</label>
-        <input type="file" id="fileInput">
-        <button class="btn btn-file" onclick="sendFileEmail()" style="margin-top: 10px; margin-bottom: 0;">Отправить выбранный файл</button>
+    <div class="logo-area">
+        <h1>STASH</h1>
+        <div class="subtitle">Отправьте файл для быстрой печати</div>
     </div>
 
-    <!-- Viber (исправлено на прямой системный вызов чата) -->
-    <a href="viber://chat?number=%2B375291507774" class="btn btn-viber">
-        💬 Отправить в Viber
-    </a>
+    <!-- Блок выбора файла с телефона -->
+    <div class="file-upload-card">
+        <label class="file-label">📁 Выберите документ или фото:</label>
+        <label for="fileInput" class="custom-file-btn">Обзор файлов</label>
+        <input type="file" id="fileInput" onchange="showFileName()">
+        <div id="fileName" class="file-name-display">Файл не выбран</div>
+        <button class="btn btn-file-send" onclick="sendFileEmail()" style="margin-bottom: 0; padding: 12px; font-size: 14px;">Отправить на почту</button>
+    </div>
+
+    <div class="divider">или через мессенджер</div>
 
     <!-- Telegram -->
     <a href="https://t.me/375291507774" class="btn btn-telegram">
-        ✈️ Отправить в Telegram
+        ✈️ Telegram
     </a>
 
     <!-- WhatsApp -->
-    <a href="https://wa.me/375291507744" class="btn btn-whatsapp">
-        🟢 Отправить в WhatsApp
+    <a href="https://wa.me/375291507774" class="btn btn-whatsapp">
+        🟢 WhatsApp
+    </a>
+
+    <!-- Viber -->
+    <a href="viber://add?number=375291507774" class="btn btn-viber">
+        💬 Viber
     </a>
 
     <!-- Email -->
@@ -129,14 +193,24 @@
 </div>
 
 <script>
+    function showFileName() {
+        const fileInput = document.getElementById('fileInput');
+        const fileNameDiv = document.getElementById('fileName');
+        if (fileInput.files.length > 0) {
+            fileNameDiv.textContent = "Выбран: " + fileInput.files[0].name;
+        } else {
+            fileNameDiv.textContent = "Файл не выбран";
+        }
+    }
+
     function sendFileEmail() {
         const fileInput = document.getElementById('fileInput');
         if (fileInput.files.length === 0) {
-            alert('Пожалуйста, выберите файл перед отправкой!');
+            alert('Пожалуйста, выберите файл на телефоне!');
             return;
         }
         const fileName = fileInput.files[0].name;
-        window.location.href = `mailto:info@stash.by?subject=Печать: ${encodeURIComponent(fileName)}&body=Файл прикреплен пользователем с телефона.`;
+        window.location.href = `mailto:info@stash.by?subject=Печать: ${encodeURIComponent(fileName)}&body=Файл прикреплен клиентом с мобильного устройства.`;
     }
 </script>
 
