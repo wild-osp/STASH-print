@@ -103,8 +103,8 @@
         <button class="btn btn-file" onclick="sendFileEmail()" style="margin-top: 10px; margin-bottom: 0;">Отправить выбранный файл</button>
     </div>
 
-    <!-- Viber -->
-    <a href="viber://add?number=375291507744" class="btn btn-viber">
+    <!-- Viber (исправлено на официальный короткий формат viber.me) -->
+    <a href="https://viber.me/375291507744" class="btn btn-viber">
         💬 Отправить в Viber
     </a>
 
@@ -136,7 +136,6 @@
             return;
         }
         const fileName = fileInput.files[0].name;
-        // Открывает почтовый клиент с заполненной темой, клиенту останется только нажать "Отправить"
         window.location.href = `mailto:info@stash.by?subject=Печать: ${encodeURIComponent(fileName)}&body=Файл прикреплен пользователем с телефона.`;
     }
 </script>
