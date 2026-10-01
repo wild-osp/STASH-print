@@ -25,17 +25,16 @@
             box-shadow: 0 4px 20px rgba(0,0,0,0.08);
             text-align: center;
         }
-        h0 {
-            display: block;
+        h1 {
             font-size: 24px;
             font-weight: 700;
-            margin-bottom: 8px;
+            margin: 0 0 8px 0;
             color: #111;
         }
         .subtitle {
-            font-size: 15px;
+            font-size: 14px;
             color: #666;
-            margin-bottom: 30px;
+            margin-bottom: 25px;
             line-height: 1.4;
         }
         .btn {
@@ -43,14 +42,16 @@
             align-items: center;
             justify-content: center;
             width: 100%;
-            padding: 16px;
-            margin-bottom: 14px;
+            padding: 15px;
+            margin-bottom: 12px;
             border-radius: 12px;
             font-size: 16px;
             font-weight: 600;
             text-decoration: none;
             color: white;
             box-sizing: border-box;
+            border: none;
+            cursor: pointer;
             transition: opacity 0.2s;
         }
         .btn:active {
@@ -59,11 +60,32 @@
         .btn-viber { background-color: #7360f2; }
         .btn-telegram { background-color: #24a1de; }
         .btn-whatsapp { background-color: #25d366; }
+        .btn-file { background-color: #ff8c00; }
         .btn-email { background-color: #4285f4; }
         
-        .footer {
-            margin-top: 25px;
+        .file-box {
+            background: #fafafa;
+            border: 2px dashed #ddd;
+            padding: 15px;
+            border-radius: 12px;
+            margin-bottom: 20px;
+            text-align: left;
+        }
+        .file-box label {
+            display: block;
             font-size: 13px;
+            color: #555;
+            margin-bottom: 8px;
+            font-weight: 600;
+        }
+        input[type="file"] {
+            width: 100%;
+            font-size: 13px;
+            color: #555;
+        }
+        .footer {
+            margin-top: 20px;
+            font-size: 12px;
             color: #999;
         }
     </style>
@@ -71,16 +93,23 @@
 <body>
 
 <div class="card">
-    <h0>STASH</h0>
-    <div class="subtitle">Отправьте файл для печати в один клик через удобный мессенджер или почту:</div>
+    <h1>STASH</h1>
+    <div class="subtitle">Выберите способ отправки файла для печати:</div>
+
+    <!-- Прямая загрузка файла с устройства на почту -->
+    <div class="file-box">
+        <label>📁 Выбрать файл с телефона:</label>
+        <input type="file" id="fileInput">
+        <button class="btn btn-file" onclick="sendFileEmail()" style="margin-top: 10px; margin-bottom: 0;">Отправить выбранный файл</button>
+    </div>
 
     <!-- Viber -->
-    <a href="viber://chat?number=+375291507744" class="btn btn-viber">
+    <a href="viber://add?number=375291507744" class="btn btn-viber">
         💬 Отправить в Viber
     </a>
 
     <!-- Telegram -->
-    <a href="https://t.me/+375291507744" class="btn btn-telegram">
+    <a href="https://t.me/375291507744" class="btn btn-telegram">
         ✈️ Отправить в Telegram
     </a>
 
@@ -90,14 +119,27 @@
     </a>
 
     <!-- Email -->
-    <a href="mailto:info@stash.by?subject=Печать" class="btn btn-email">
-        📧 Отправить на Email
+    <a href="mailto:info@stash.by?subject=Печать документа" class="btn btn-email">
+        📧 Написать на Email
     </a>
 
     <div class="footer">
         Сервис технического ремонта и печати STASH
     </div>
 </div>
+
+<script>
+    function sendFileEmail() {
+        const fileInput = document.getElementById('fileInput');
+        if (fileInput.files.length === 0) {
+            alert('Пожалуйста, выберите файл перед отправкой!');
+            return;
+        }
+        const fileName = fileInput.files[0].name;
+        // Открывает почтовый клиент с заполненной темой, клиенту останется только нажать "Отправить"
+        window.location.href = `mailto:info@stash.by?subject=Печать: ${encodeURIComponent(fileName)}&body=Файл прикреплен пользователем с телефона.`;
+    }
+</script>
 
 </body>
 </html>
