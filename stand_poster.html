@@ -3,320 +3,423 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>STASH — Табличка на стойку для печати (QR)</title>
-    <!-- Подключение Tailwind CSS и шрифта Inter -->
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
-    <!-- QR Code Generator Library -->
+    <title>Печатная табличка STASH — QR и NFC</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@500;700;800;900&display=swap" rel="stylesheet">
+    <!-- Библиотека генерации QR-кода -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 
     <style>
-        body {
-            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
-            background-color: #f1f5f9;
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            -webkit-print-color-adjust: exact !important;
+            print-color-adjust: exact !important;
         }
 
-        /* Габариты стандартных печатных листов для превью */
-        .sheet-a4 {
+        body {
+            font-family: 'Inter', sans-serif;
+            background: #cbd5e1;
+            color: #0f172a;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 20px;
+        }
+
+        /* Верхняя панель управления (скрывается при печати) */
+        .controls-bar {
+            background: #ffffff;
+            padding: 12px 24px;
+            border-radius: 14px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.15);
+            display: flex;
+            gap: 16px;
+            align-items: center;
+            margin-bottom: 24px;
+            z-index: 100;
+        }
+        .btn-action {
+            background: #2563eb;
+            color: #ffffff;
+            font-weight: 700;
+            font-size: 15px;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 10px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .btn-action:hover { background: #1d4ed8; }
+        
+        .format-select {
+            padding: 8px 12px;
+            font-size: 14px;
+            font-weight: 600;
+            border-radius: 8px;
+            border: 2px solid #cbd5e1;
+            cursor: pointer;
+        }
+
+        /* Лист макета (по умолчанию A4) */
+        .sheet {
+            background: #ffffff;
             width: 210mm;
             min-height: 297mm;
+            height: 297mm;
+            padding: 14mm 16mm;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.25);
+            border-radius: 4px;
+            position: relative;
+            overflow: hidden;
         }
-        .sheet-a5 {
+
+        /* Формат A5 */
+        .sheet.a5 {
             width: 148mm;
             min-height: 210mm;
+            height: 210mm;
+            padding: 10mm 12mm;
         }
 
-        /* Сканерные метки вокруг увеличенного QR-кода */
-        .corner-bracket {
-            position: absolute;
+        /* Рамка и акцентная шапка */
+        .header-box {
+            background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+            color: #ffffff;
+            padding: 18px 20px;
+            border-radius: 20px;
+            text-align: center;
+            border-bottom: 5px solid #2563eb;
+        }
+        .brand-title {
+            font-size: 42px;
+            font-weight: 900;
+            letter-spacing: 2px;
+            color: #ffffff;
+            line-height: 1.1;
+        }
+        .brand-subtitle {
+            font-size: 20px;
+            font-weight: 700;
+            color: #38bdf8;
+            margin-top: 6px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        /* Центральная зона с QR и NFC */
+        .main-scan-area {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 16px;
+            margin: auto 0;
+        }
+
+        .qr-card {
+            background: #ffffff;
+            padding: 18px;
+            border-radius: 26px;
+            border: 4px solid #0f172a;
+            box-shadow: 0 12px 28px rgba(15, 23, 42, 0.12);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            position: relative;
+        }
+
+        #qrcode {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        #qrcode img {
+            display: block;
+        }
+
+        .qr-badge {
+            background: #0f172a;
+            color: #ffffff;
+            font-size: 15px;
+            font-weight: 800;
+            padding: 8px 18px;
+            border-radius: 20px;
+            margin-top: 12px;
+            letter-spacing: 0.5px;
+            text-transform: uppercase;
+        }
+
+        /* Зона NFC-метки (мишень для наклейки сзади) */
+        .nfc-spot {
+            width: 100%;
+            max-width: 420px;
+            background: #eff6ff;
+            border: 3px dashed #2563eb;
+            border-radius: 18px;
+            padding: 12px 18px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 14px;
+        }
+        .nfc-icon-circle {
+            width: 48px;
+            height: 48px;
+            background: #2563eb;
+            color: #ffffff;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+            box-shadow: 0 4px 10px rgba(37,99,235,0.3);
+        }
+        .nfc-icon-circle svg {
             width: 28px;
             height: 28px;
-            border-color: #0f172a;
-            pointer-events: none;
+            fill: currentColor;
         }
-        .corner-tl { top: -4px; left: -4px; border-top: 4px solid; border-left: 4px solid; border-radius: 9px 0 0 0; }
-        .corner-tr { top: -4px; right: -4px; border-top: 4px solid; border-right: 4px solid; border-radius: 0 9px 0 0; }
-        .corner-bl { bottom: -4px; left: -4px; border-bottom: 4px solid; border-left: 4px solid; border-radius: 0 0 0 9px; }
-        .corner-br { bottom: -4px; right: -4px; border-bottom: 4px solid; border-right: 4px solid; border-radius: 0 0 9px 0; }
+        .nfc-text {
+            text-align: left;
+        }
+        .nfc-text-title {
+            font-size: 16px;
+            font-weight: 800;
+            color: #1e3a8a;
+            text-transform: uppercase;
+        }
+        .nfc-text-desc {
+            font-size: 13px;
+            font-weight: 600;
+            color: #475569;
+        }
 
-        /* Правила для физического принтера и экспорта в PDF */
+        /* Шаги 1 - 2 - 3 (сочные цветные карточки) */
+        .steps-container {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 12px;
+            margin-bottom: 12px;
+        }
+        .step-item {
+            background: #f8fafc;
+            border: 2px solid #e2e8f0;
+            border-radius: 16px;
+            padding: 14px 10px;
+            text-align: center;
+        }
+        .step-num {
+            width: 28px;
+            height: 28px;
+            background: #0f172a;
+            color: #ffffff;
+            font-size: 15px;
+            font-weight: 800;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 8px;
+        }
+        .step-title {
+            font-size: 14px;
+            font-weight: 800;
+            color: #0f172a;
+            margin-bottom: 4px;
+        }
+        .step-desc {
+            font-size: 12px;
+            font-weight: 600;
+            color: #64748b;
+            line-height: 1.3;
+        }
+
+        /* Нижняя контактная плашка */
+        .footer-banner {
+            background: #0f172a;
+            color: #ffffff;
+            border-radius: 16px;
+            padding: 12px 18px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            font-size: 15px;
+            font-weight: 700;
+        }
+        .footer-banner .contact-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            white-space: nowrap;
+        }
+        .footer-link-badge {
+            background: #334155;
+            color: #38bdf8;
+            padding: 4px 10px;
+            border-radius: 8px;
+            font-family: monospace;
+            font-size: 14px;
+        }
+
+        /* Стили адаптации под компактный формат А5 */
+        .sheet.a5 .header-box { padding: 12px; border-radius: 14px; }
+        .sheet.a5 .brand-title { font-size: 28px; }
+        .sheet.a5 .brand-subtitle { font-size: 14px; }
+        .sheet.a5 .qr-card { padding: 12px; border-radius: 18px; border-width: 3px; }
+        .sheet.a5 .qr-badge { font-size: 12px; padding: 6px 14px; }
+        .sheet.a5 .nfc-spot { padding: 8px 12px; border-radius: 14px; }
+        .sheet.a5 .nfc-icon-circle { width: 36px; height: 36px; }
+        .sheet.a5 .nfc-icon-circle svg { width: 20px; height: 20px; }
+        .sheet.a5 .nfc-text-title { font-size: 13px; }
+        .sheet.a5 .nfc-text-desc { font-size: 11px; }
+        .sheet.a5 .steps-container { gap: 8px; margin-bottom: 8px; }
+        .sheet.a5 .step-item { padding: 8px 6px; border-radius: 12px; }
+        .sheet.a5 .step-num { width: 22px; height: 22px; font-size: 12px; margin-bottom: 4px; }
+        .sheet.a5 .step-title { font-size: 12px; }
+        .sheet.a5 .step-desc { font-size: 10px; }
+        .sheet.a5 .footer-banner { padding: 10px 14px; font-size: 12px; border-radius: 12px; }
+        .sheet.a5 .footer-link-badge { font-size: 11px; }
+
+        /* Правила чистой печати */
         @media print {
             body {
-                background: none !important;
-                padding: 0 !important;
-                margin: 0 !important;
+                background: none;
+                padding: 0;
             }
-            .no-print {
+            .controls-bar {
                 display: none !important;
             }
-            .poster-card {
+            .sheet {
                 box-shadow: none !important;
                 border: none !important;
-                margin: 0 auto !important;
+                margin: 0 !important;
+                page-break-after: avoid;
                 page-break-inside: avoid;
             }
             @page {
+                margin: 0;
                 size: auto;
-                margin: 0mm;
             }
         }
     </style>
 </head>
-<body class="min-h-screen py-6 px-3 sm:px-6 flex flex-col items-center justify-start text-slate-900">
+<body>
 
-    <!-- Панель управления (не печатается) -->
-    <header class="no-print w-full max-w-4xl bg-white border border-slate-200 rounded-2xl shadow-sm p-4 sm:p-5 mb-6 flex flex-col gap-4">
-        <div class="flex flex-wrap items-center justify-between gap-3">
-            <div class="flex items-center gap-3">
-                <div class="w-10 h-10 rounded-xl bg-slate-900 text-white flex items-center justify-center font-black text-lg tracking-wider shadow-sm">
-                    S
-                </div>
-                <div>
-                    <h1 class="text-base font-bold text-slate-900">Табличка для стойки STASH</h1>
-                    <p class="text-xs text-slate-500">Увеличенный QR-код для лёгкого сканирования с расстояния</p>
-                </div>
-            </div>
+    <!-- Панель настроек (видна только на экране) -->
+    <div class="controls-bar">
+        <label style="font-weight: 700; font-size: 14px;">Формат листа:</label>
+        <select id="formatSelector" class="format-select" onchange="changeFormat(this.value)">
+            <option value="a4" selected>Формат А4 (Большой, в рамку)</option>
+            <option value="a5">Формат А5 (Подставка / Тейбл-тент)</option>
+        </select>
+        <button class="btn-action" onclick="window.print()">
+            🖨️ Распечатать / Сохранить в PDF
+        </button>
+    </div>
 
-            <div class="flex items-center gap-2">
-                <!-- Переключатель формата листа -->
-                <div class="bg-slate-100 p-1 rounded-xl flex text-xs font-semibold text-slate-700">
-                    <button id="btnA4" onclick="setFormat('a4')" class="px-3.5 py-1.5 rounded-lg bg-white shadow-sm text-slate-900 transition-all">
-                        Формат A4
-                    </button>
-                    <button id="btnA5" onclick="setFormat('a5')" class="px-3.5 py-1.5 rounded-lg text-slate-500 hover:text-slate-900 transition-all">
-                        Формат A5
-                    </button>
-                </div>
-
-                <!-- Кнопка печати -->
-                <button onclick="window.print()" class="flex items-center gap-2 px-4 py-2 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-semibold text-xs sm:text-sm shadow-sm transition active:scale-95">
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4H7v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"/>
-                    </svg>
-                    Распечатать / PDF
-                </button>
-            </div>
-        </div>
-
-        <!-- Настройка ссылки и кодирования -->
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-3 pt-3 border-t border-slate-100">
-            <div>
-                <label class="block text-xs font-semibold text-slate-700 mb-1">Короткая ссылка (на плакате):</label>
-                <div class="flex gap-2">
-                    <input id="shortUrlInput" type="text" value="clck.ru/stash-print" oninput="updateShortUrl()" class="w-full text-xs sm:text-sm font-mono px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="clck.ru/ваш-код">
-                    <button onclick="applyDefaultShort('clck')" class="text-[11px] px-2.5 py-1 rounded-lg bg-slate-100 hover:bg-slate-200 font-semibold text-slate-600 whitespace-nowrap">clck.ru</button>
-                    <button onclick="applyDefaultShort('tiny')" class="text-[11px] px-2.5 py-1 rounded-lg bg-slate-100 hover:bg-slate-200 font-semibold text-slate-600 whitespace-nowrap">tinyurl</button>
-                </div>
-            </div>
-
-            <div>
-                <label class="block text-xs font-semibold text-slate-700 mb-1">Что зашито в QR-код:</label>
-                <div class="flex items-center gap-4 text-xs font-medium text-slate-700 h-9">
-                    <label class="flex items-center gap-1.5 cursor-pointer">
-                        <input type="radio" name="qrSource" value="original" checked onchange="toggleQrTarget('original')" class="text-blue-600 focus:ring-blue-500">
-                        <span>Оригинал (github.io)</span>
-                    </label>
-                    <label class="flex items-center gap-1.5 cursor-pointer">
-                        <input type="radio" name="qrSource" value="short" onchange="toggleQrTarget('short')" class="text-blue-600 focus:ring-blue-500">
-                        <span>Короткая ссылка</span>
-                    </label>
-                </div>
-            </div>
-        </div>
-    </header>
-
-    <!-- Сам печатный лист -->
-    <main id="posterContainer" class="poster-card sheet-a4 bg-white border border-slate-200 shadow-xl rounded-3xl p-8 sm:p-11 flex flex-col justify-between items-center text-center relative overflow-hidden transition-all duration-300">
+    <!-- Основной лист для печати -->
+    <div id="printSheet" class="sheet">
         
-        <!-- Верхняя акцентная полоска -->
-        <div class="absolute top-0 left-0 right-0 h-3 bg-gradient-to-r from-blue-600 via-indigo-600 to-sky-500"></div>
-
-        <!-- Шапка плаката без плашки "Быстрая печать" -->
-        <div class="w-full flex flex-col items-center pt-1">
-            <div id="brandTitle" class="text-4xl sm:text-5xl font-black tracking-tight text-slate-900 mb-1 leading-none">
-                STASH
-            </div>
-
-            <div id="promoTitle" class="text-xl sm:text-3xl font-extrabold text-slate-800 tracking-tight">
-                Печать с телефона за 10 секунд
-            </div>
-            <p id="promoSubtitle" class="text-xs sm:text-sm text-slate-500 mt-1 max-w-sm">
-                Без проводов, очередей и поиска контактов
-            </p>
+        <!-- Контрастная шапка -->
+        <div class="header-box">
+            <div class="brand-title">STASH</div>
+            <div class="brand-subtitle">Печать документов и фото с телефона</div>
         </div>
 
-        <!-- Центр: Увеличенный QR-код с фокусной рамкой -->
-        <div id="qrWrapper" class="my-3 sm:my-5 flex flex-col items-center">
-            <div id="qrCardBox" class="relative p-5 sm:p-7 bg-white rounded-3xl shadow-lg border border-slate-100">
-                <!-- Уголки сканера -->
-                <div class="corner-bracket corner-tl"></div>
-                <div class="corner-bracket corner-tr"></div>
-                <div class="corner-bracket corner-bl"></div>
-                <div class="corner-bracket corner-br"></div>
-
-                <!-- Контейнер для увеличенного QR-кода -->
-                <div id="qrcode" class="flex items-center justify-center"></div>
+        <!-- Центральный блок: Большой QR + Зона NFC -->
+        <div class="main-scan-area">
+            
+            <div class="qr-card">
+                <div id="qrcode"></div>
+                <div class="qr-badge">📷 Наведите камеру</div>
             </div>
 
-            <div id="scanHelper" class="mt-3 flex items-center gap-2 text-xs sm:text-sm font-bold text-slate-700 tracking-wide uppercase">
-                <svg class="w-4 h-4 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h.01M12 12h4.01M16 20h4M4 12h4m12 0h.01M5 8h2a1 1 0 001-1V5a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1zm12 0h2a1 1 0 001-1V5a1 1 0 00-1-1h-2a1 1 0 00-1 1v2a1 1 0 001 1zM5 20h2a1 1 0 001-1v-2a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1z"/>
-                </svg>
-                Наведите камеру смартфона
+            <!-- Блок / Мишень для NFC -->
+            <div class="nfc-spot">
+                <div class="nfc-icon-circle">
+                    <!-- Иконка NFC / бесконтактная передача -->
+                    <svg viewBox="0 0 24 24">
+                        <path d="M20 2H4c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm0 18H4V4h16v16zM18 6h-5c-1.1 0-2 .9-2 2v2.15c-.64.36-1.14.93-1.42 1.62-.28.7-.3 1.48-.06 2.21.24.73.74 1.34 1.4 1.72V18h2v-2.15c.64-.36 1.14-.93 1.42-1.62.28-.7.3-1.48.06-2.21-.24-.73-.74-1.34-1.4-1.72V8h5V6z"/>
+                    </svg>
+                </div>
+                <div class="nfc-text">
+                    <div class="nfc-text-title">Или приложите телефон (NFC)</div>
+                    <div class="nfc-text-desc">Поднесите смартфон задней крышкой к этой метке</div>
+                </div>
             </div>
+
         </div>
 
-        <!-- Пошаговые шаги для клиента (Telegram написано полностью) -->
-        <div id="stepsGrid" class="w-full grid grid-cols-3 gap-2 sm:gap-3.5 my-2 text-left">
-            <!-- Шаг 1 -->
-            <div class="bg-slate-50 border border-slate-100 rounded-2xl p-2.5 sm:p-3.5 flex flex-col justify-between">
-                <div class="w-6 h-6 sm:w-7 sm:h-7 rounded-xl bg-blue-600 text-white text-[11px] sm:text-xs font-bold flex items-center justify-center mb-1 shadow-sm">
-                    1
-                </div>
-                <div>
-                    <div class="text-[11px] sm:text-sm font-bold text-slate-900 leading-tight">Камера</div>
-                    <div class="text-[10px] sm:text-xs text-slate-500 mt-0.5 leading-snug">Сканируйте QR или откройте ссылку</div>
-                </div>
+        <!-- 3 простых шага -->
+        <div class="steps-container">
+            <div class="step-item">
+                <div class="step-num">1</div>
+                <div class="step-title">Отсканируйте</div>
+                <div class="step-desc">Камерой или приложите телефон</div>
             </div>
-
-            <!-- Шаг 2 -->
-            <div class="bg-slate-50 border border-slate-100 rounded-2xl p-2.5 sm:p-3.5 flex flex-col justify-between">
-                <div class="w-6 h-6 sm:w-7 sm:h-7 rounded-xl bg-indigo-600 text-white text-[11px] sm:text-xs font-bold flex items-center justify-center mb-1 shadow-sm">
-                    2
-                </div>
-                <div>
-                    <div class="text-[11px] sm:text-sm font-bold text-slate-900 leading-tight">Файл</div>
-                    <div class="text-[10px] sm:text-xs text-slate-500 mt-0.5 leading-snug">Viber, Telegram, WhatsApp или файл</div>
-                </div>
+            <div class="step-item">
+                <div class="step-num">2</div>
+                <div class="step-title">Отправьте</div>
+                <div class="step-desc">Viber, Telegram или WhatsApp</div>
             </div>
-
-            <!-- Шаг 3 -->
-            <div class="bg-slate-50 border border-slate-100 rounded-2xl p-2.5 sm:p-3.5 flex flex-col justify-between">
-                <div class="w-6 h-6 sm:w-7 sm:h-7 rounded-xl bg-emerald-600 text-white text-[11px] sm:text-xs font-bold flex items-center justify-center mb-1 shadow-sm">
-                    3
-                </div>
-                <div>
-                    <div class="text-[11px] sm:text-sm font-bold text-slate-900 leading-tight">Готово</div>
-                    <div class="text-[10px] sm:text-xs text-slate-500 mt-0.5 leading-snug">Заберите распечатанные листы</div>
-                </div>
+            <div class="step-item">
+                <div class="step-num">3</div>
+                <div class="step-title">Заберите</div>
+                <div class="step-desc">Быстрая готовая распечатка</div>
             </div>
         </div>
 
-        <!-- Нижняя строка: адаптирована под А5 без вылезания номера -->
-        <div id="contactFooter" class="w-full pt-3 sm:pt-4 border-t border-slate-100 flex flex-col gap-2">
-            <!-- Двухколоночная аккуратная сетка, идеально читаемая в А5 -->
-            <div class="w-full flex items-center justify-between text-xs sm:text-sm gap-2">
-                <div class="flex items-center gap-1.5 font-bold text-slate-800 text-[12px] sm:text-[14px]">
-                    <span class="text-blue-600">📞</span>
-                    <span class="tracking-tight whitespace-nowrap">+375 (29) 150-77-74</span>
-                </div>
-                <div class="flex items-center gap-1.5 font-semibold text-slate-600 text-[11px] sm:text-[13px]">
-                    <span class="text-blue-600">✉️</span>
-                    <span class="whitespace-nowrap">info@stash.by</span>
-                </div>
+        <!-- Нижняя контрастная контактная полоса -->
+        <div class="footer-banner">
+            <div class="contact-item">
+                📞 +375 (29) 150-77-74
             </div>
-
-            <!-- Короткая ссылка текстом для ручного ввода -->
-            <div class="w-full flex items-center justify-center gap-2 pt-1 text-[11px] sm:text-xs text-slate-500 bg-slate-50 py-1.5 px-3 rounded-xl border border-slate-100">
-                <span class="font-medium text-slate-600">Ссылка для браузера:</span>
-                <span id="displayShortUrl" class="font-bold font-mono text-blue-600 text-[12px] sm:text-[13px]">clck.ru/stash-print</span>
+            <div class="contact-item">
+                🌐 <span class="footer-link-badge">clck.ru/stash-print</span>
+            </div>
+            <div class="contact-item">
+                ✉️ info@stash.by
             </div>
         </div>
 
-    </main>
+    </div>
 
     <script>
-        const originalUrl = "https://wild-osp.github.io/STASH-print/";
-        let currentShortUrl = "clck.ru/stash-print";
-        let activeQrMode = "original";
-        let currentFormat = "a4";
+        const TARGET_URL = "https://wild-osp.github.io/STASH-print/";
+        let qrCodeInstance = null;
 
-        function getActiveQrUrl() {
-            if (activeQrMode === "short") {
-                return currentShortUrl.startsWith("http") ? currentShortUrl : "https://" + currentShortUrl;
-            }
-            return originalUrl;
-        }
-
-        // Генерация увеличенного QR-кода
-        function generateQRCode() {
+        function renderQR(size) {
             const qrContainer = document.getElementById("qrcode");
             qrContainer.innerHTML = "";
-            
-            // Увеличенные габариты QR-кода: A4 = 280px (было 215), A5 = 175px (было 145)
-            const size = currentFormat === 'a5' ? 175 : 280;
-
-            new QRCode(qrContainer, {
-                text: getActiveQrUrl(),
+            qrCodeInstance = new QRCode(qrContainer, {
+                text: TARGET_URL,
                 width: size,
                 height: size,
-                colorDark: "#090d16",
+                colorDark: "#0f172a",
                 colorLight: "#ffffff",
                 correctLevel: QRCode.CorrectLevel.H
             });
         }
 
-        // Обновление отображения короткой ссылки
-        function updateShortUrl() {
-            const val = document.getElementById("shortUrlInput").value.trim();
-            currentShortUrl = val || "clck.ru/stash-print";
-            document.getElementById("displayShortUrl").textContent = currentShortUrl;
-            if (activeQrMode === "short") {
-                generateQRCode();
-            }
-        }
-
-        // Быстрые шаблоны коротких ссылок
-        function applyDefaultShort(type) {
-            const input = document.getElementById("shortUrlInput");
-            if (type === 'clck') {
-                input.value = "clck.ru/stash-print";
+        function changeFormat(format) {
+            const sheet = document.getElementById("printSheet");
+            if (format === "a5") {
+                sheet.classList.add("a5");
+                renderQR(180); // Оптимальный размер для А5
             } else {
-                input.value = "tinyurl.com/stash-print";
+                sheet.classList.remove("a5");
+                renderQR(260); // Крупный контрастный размер для А4
             }
-            updateShortUrl();
         }
 
-        // Переключение источника QR (оригинал или короткая ссылка)
-        function toggleQrTarget(mode) {
-            activeQrMode = mode;
-            generateQRCode();
-        }
-
-        // Переключение формата А4 / А5 с пропорциональной подгонкой отступов
-        function setFormat(format) {
-            currentFormat = format;
-            const poster = document.getElementById("posterContainer");
-            const btnA4 = document.getElementById("btnA4");
-            const btnA5 = document.getElementById("btnA5");
-
-            if (format === 'a5') {
-                poster.classList.remove('sheet-a4');
-                poster.classList.add('sheet-a5');
-                poster.style.padding = "18px 16px";
-
-                btnA5.classList.add('bg-white', 'shadow-sm', 'text-slate-900');
-                btnA5.classList.remove('text-slate-500');
-                btnA4.classList.remove('bg-white', 'shadow-sm', 'text-slate-900');
-                btnA4.classList.add('text-slate-500');
-            } else {
-                poster.classList.remove('sheet-a5');
-                poster.classList.add('sheet-a4');
-                poster.style.padding = "";
-
-                btnA4.classList.add('bg-white', 'shadow-sm', 'text-slate-900');
-                btnA4.classList.remove('text-slate-500');
-                btnA5.classList.remove('bg-white', 'shadow-sm', 'text-slate-900');
-                btnA5.classList.add('text-slate-500');
-            }
-
-            generateQRCode();
-        }
-
-        window.addEventListener('load', () => {
-            updateShortUrl();
-            generateQRCode();
-        });
+        // Первичная генерация для А4
+        renderQR(260);
     </script>
 </body>
 </html>
